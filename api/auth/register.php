@@ -37,11 +37,11 @@ if (isset($_POST['full_name'], $_POST['email'], $_POST['password'])) {
         else {
 
             /* Hash password before storing */
-         //   $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
             $role   = "admin"; // default role
             $insert = $connect->prepare("INSERT INTO users (full_name, email, password,  created_at) VALUES (?, ?, ?, NOW())");
-            $insert->bind_param("sss", $full_name, $email, $password);
+            $insert->bind_param("sss", $full_name, $email, $hashed_password);
 
             if ($insert->execute()) {
                 respondOK([], "Registration successful.");

@@ -33,9 +33,9 @@ if ($result->num_rows === 0) {
 $user = $result->fetch_assoc();
 
 /* Verify password */
-// if (!password_verify($password, $user['password'])) {
-//     respondBadRequest("Invalid login credentials.");
-// }
+if (!password_verify($password, $user['password'])) {
+    respondBadRequest("Invalid login credentials.");
+}
 
 /* Generate Token */
 $token = getTokenToSendAPI($user['id']);
