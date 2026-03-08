@@ -33,7 +33,22 @@ if ($result->num_rows === 0) {
 $user = $result->fetch_assoc();
 
 /* Verify password */
-if (!password_verify($password, $user['password'])) {
+if (password_verify($password, $user['password'])) {
+    if (password_needs_rehash($user['password'], PASSWORD_DEFAULT)) {
+        $new_hash = password_hash($password, PASSWORD_DEFAULT);
+        $update = $connect->prepare("UPDATE users SET password = ? WHERE id = ?");
+        $update->bind_param("si", $new_hash, $user['id']);
+        $update->execute();
+    }
+}
+/* Backward compatibility for old plain-text passwords */
+else if (hash_equals((string)$user['password'], (string)$password)) {
+    $new_hash = password_hash($password, PASSWORD_DEFAULT);
+    $update = $connect->prepare("UPDATE users SET password = ? WHERE id = ?");
+    $update->bind_param("si", $new_hash, $user['id']);
+    $update->execute();
+}
+else {
     respondBadRequest("Invalid login credentials.");
 }
 
