@@ -7,6 +7,8 @@ include "../../head.php";
 $datasentin = ValidateAPITokenSentIN();
 $user_id = $datasentin->usertoken;
 
+
+
 if (!isset($user_id) || input_is_invalid($user_id) || !is_numeric($user_id)) {
     respondUnauthorized();
 }
@@ -28,6 +30,12 @@ if (isset($_POST['member_id']) && isset($_POST['book_id'])) {
 
         $member_id = (int)$member_id;
         $book_id   = (int)$book_id;
+        if ($member_id < 1) {
+            respondBadRequest("A valid member ID is required.");
+        }
+        if ($book_id < 1) {
+            respondBadRequest("A valid book ID is required.");
+        }
 
         /* Check member */
         $memberCheck = $connect->prepare("SELECT id FROM members WHERE id = ?");

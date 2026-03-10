@@ -6,14 +6,15 @@ include "../../head.php";
 /* Validate token */
 $user = ValidateAPITokenSentIN();
 
+if (getenv('REQUEST_METHOD') !== 'POST') {
+    respondMethodNotAlowed();
+}
+
 if (isset($_POST['title']) && isset($_POST['author']) && isset($_POST['total_copies'])) {
 
     $title  = cleanme($_POST['title']);
     $author = cleanme($_POST['author']);
     $copies = cleanme($_POST['total_copies']);
-
-    $datasentin = ValidateAPITokenSentIN();
-    $user_id    = $datasentin->usertoken;
 
     /* Input validation */
 
@@ -28,7 +29,25 @@ if (isset($_POST['title']) && isset($_POST['author']) && isset($_POST['total_cop
     } 
     else {
 
+        $title = preg_replace('/\s+/', ' ', trim($title));
+        $author = preg_replace('/\s+/', ' ', trim($author));
+
+        if (strlen($title) < 2 || strlen($title) > 150) {
+            respondBadRequest("Book title must be between 2 and 150 characters.");
+        } else if (strlen($author) < 2 || strlen($author) > 100) {
+            respondBadRequest("Author name must be between 2 and 100 characters.");
+        } else if (isStringHasEmojis($title) || isStringHasEmojis($author)) {
+            respondBadRequest("Invalid characters in title or author.");
+        } else if (!preg_match("/^[A-Za-z0-9 .,'\"-]+$/", $title)) {
+            respondBadRequest("Book title contains invalid characters.");
+        } else if (!preg_match("/^[A-Za-z0-9 .,'\"-]+$/", $author)) {
+            respondBadRequest("Author name contains invalid characters.");
+        }
+
         $copies = (int)$copies;
+        if ($copies < 1 || $copies > 10000) {
+            respondBadRequest("Total copies must be between 1 and 10000.");
+        }
 
         /* Check if book already exists */
         $check = $connect->prepare("SELECT id FROM books WHERE title = ? AND author = ?");

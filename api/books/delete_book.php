@@ -6,19 +6,23 @@ include "../../head.php";
 /* Validate token */
 $user = ValidateAPITokenSentIN();
 
+if (getenv('REQUEST_METHOD') !== 'POST') {
+    respondMethodNotAlowed();
+}
+
 if (isset($_POST['id'])) {
 
     $book_id = cleanme($_POST['id']);
     
-    $datasentin = ValidateAPITokenSentIN();
-    $user_id    = $datasentin->usertoken;
-
     if (input_is_invalid($book_id) || !is_numeric($book_id)) {
         respondBadRequest("A valid book ID is required.");
     } 
     else {
 
         $book_id = (int)$book_id;
+        if ($book_id < 1) {
+            respondBadRequest("A valid book ID is required.");
+        }
 
         /* Check if book exists */
         $check = $connect->prepare("SELECT id FROM books WHERE id = ?");

@@ -7,7 +7,9 @@ include "../../head.php";
 $datasentin = ValidateAPITokenSentIN();
 $user_id    = $datasentin->usertoken;
 
-if (input_is_invalid($user_id)) {
+
+
+if (input_is_invalid($user_id) || !is_numeric($user_id) || (int)$user_id < 1) {
     respondBadRequest("Invalid user session.");
 } else {
 

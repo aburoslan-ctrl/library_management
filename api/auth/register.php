@@ -7,21 +7,40 @@ include "../../head.php";
 $datasentin = ValidateAPITokenSentIN();
 $user_id    = $datasentin->usertoken;
 
+if (getenv('REQUEST_METHOD') !== 'POST') {
+    respondMethodNotAlowed();
+}
+
 if (isset($_POST['full_name'], $_POST['email'], $_POST['password'])) {
 
     $full_name = cleanme($_POST['full_name']);
-    $email    = cleanme($_POST['email']);
+    $email    = strtolower(cleanme($_POST['email']));
     $password = cleanme($_POST['password']);
+
+  
 
     /* Input validation */
     if (input_is_invalid($full_name) || input_is_invalid($email) || input_is_invalid($password)) {
         respondBadRequest("full_name, email, and password are required.");
     } 
+    else if (strlen($full_name) < 2 || strlen($full_name) > 100) {
+        respondBadRequest("Full name must be between 2 and 100 characters.");
+    }
+    else if (!preg_match("/^[A-Za-z .'-]+$/", $full_name)) {
+        respondBadRequest("Full name contains invalid characters.");
+    }
+    else if (isStringHasEmojis($full_name) || isStringHasEmojis($email)) {
+        respondBadRequest("Invalid characters in full_name or email.");
+    }
     else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         respondBadRequest("Invalid email format.");
     } 
-    else if (strlen($password) < 6) {
-        respondBadRequest("Password must be at least 6 characters.");
+    
+    else if (strlen($password) < 6 || strlen($password) > 128) {
+        respondBadRequest("Password must be between 6 and 128 characters.");
+    }
+    else if (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
+        respondBadRequest("Password must contain at least one letter and one number.");
     } 
     else {
 

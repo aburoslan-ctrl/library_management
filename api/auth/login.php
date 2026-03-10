@@ -2,17 +2,31 @@
 $method = "POST";
 include "../../head.php";
 
+
+
 if (!isset($_POST['email'], $_POST['password'])) {
     respondBadRequest("Email and password required.");
 }
 
 
-$email    = cleanme($_POST['email']);
+$email    = strtolower(cleanme($_POST['email']));
 $password = cleanme($_POST['password']);
 
 
 if (input_is_invalid($email) || input_is_invalid($password)) {
     respondBadRequest("All fields are required.");
+}
+
+if (isStringHasEmojis($email)) {
+    respondBadRequest("Invalid characters in email.");
+}
+
+if (strlen($email) > 254) {
+    respondBadRequest("Email is too long.");
+}
+
+if (strlen($password) > 128) {
+    respondBadRequest("Password is too long.");
 }
 
 /* Validate Email Format */

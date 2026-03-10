@@ -7,6 +7,8 @@ include "../../head.php";
 $datasentin = ValidateAPITokenSentIN();
 $user_id = $datasentin->usertoken;
 
+
+
 if (!isset($user_id) || input_is_invalid($user_id) || !is_numeric($user_id)) {
     respondUnauthorized();
 }
@@ -31,6 +33,20 @@ if (isset($_POST['id']) && isset($_POST['full_name']) && isset($_POST['phone']))
     else {
 
         $member_id = (int)$member_id;
+        if ($member_id < 1) {
+            respondBadRequest("A valid member ID is required.");
+        }
+
+        $full_name = preg_replace('/\s+/', ' ', trim($full_name));
+        $phone = preg_replace('/[()\s-]+/', '', trim($phone));
+
+        if (strlen($full_name) < 2 || strlen($full_name) > 100) {
+            respondBadRequest("Member full name must be between 2 and 100 characters.");
+        } else if (!preg_match("/^[A-Za-z .'-]+$/", $full_name) || isStringHasEmojis($full_name)) {
+            respondBadRequest("Member full name contains invalid characters.");
+        } else if (!preg_match('/^\+?[0-9]{7,15}$/', $phone)) {
+            respondBadRequest("Phone number must be 7 to 15 digits.");
+        }
 
         /* Check if member exists */
         $check = $connect->prepare("SELECT id FROM members WHERE id = ?");

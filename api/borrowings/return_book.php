@@ -8,6 +8,8 @@ include "../../head.php";
 $datasentin = ValidateAPITokenSentIN();
 $user_id = $datasentin->usertoken;
 
+
+
 if (!isset($user_id) || input_is_invalid($user_id) || !is_numeric($user_id)) {
     respondUnauthorized();
 }
@@ -21,6 +23,9 @@ if (isset($_POST['id'])) {
     }
 
     $borrow_id = (int)$borrow_id;
+    if ($borrow_id < 1) {
+        respondBadRequest("A valid borrow ID is required.");
+    }
 
     /* Check borrow record */
     $check = $connect->prepare("SELECT book_id, status FROM borrowings WHERE id = ?");
