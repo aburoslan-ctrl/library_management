@@ -7,9 +7,7 @@ include "../../head.php";
 $datasentin = ValidateAPITokenSentIN();
 $user_id    = $datasentin->usertoken;
 
-if (getenv('REQUEST_METHOD') !== 'POST') {
-    respondMethodNotAlowed();
-}
+
 
 if (isset($_POST['full_name'], $_POST['email'], $_POST['password'])) {
 

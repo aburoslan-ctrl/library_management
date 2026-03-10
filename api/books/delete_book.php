@@ -6,9 +6,7 @@ include "../../head.php";
 /* Validate token */
 $user = ValidateAPITokenSentIN();
 
-if (getenv('REQUEST_METHOD') !== 'POST') {
-    respondMethodNotAlowed();
-}
+
 
 if (isset($_POST['id'])) {
 

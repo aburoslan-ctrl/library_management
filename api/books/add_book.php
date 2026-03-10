@@ -6,8 +6,8 @@ include "../../head.php";
 /* Validate token */
 $user = ValidateAPITokenSentIN();
 
-if (getenv('REQUEST_METHOD') !== 'POST') {
-    respondMethodNotAlowed();
+if (!isset($user->usertoken) || input_is_invalid($user->usertoken) || !is_numeric($user->usertoken)) {
+    respondUnauthorized();
 }
 
 if (isset($_POST['title']) && isset($_POST['author']) && isset($_POST['total_copies'])) {
