@@ -17,22 +17,29 @@ if (input_is_invalid($email) || input_is_invalid($password)) {
     respondBadRequest("All fields are required.");
 }
 
-if (isStringHasEmojis($email)) {
+elseif (isStringHasEmojis($email)) {
     respondBadRequest("Invalid characters in email.");
 }
 
-if (strlen($email) > 254) {
+elseif (strlen($email) > 254) {
     respondBadRequest("Email is too long.");
 }
-
-if (strlen($password) > 128) {
-    respondBadRequest("Password is too long.");
+elseif (strlen($email) < 5) {
+    respondBadRequest("Email is too short.");
 }
-
-/* Validate Email Format */
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     respondBadRequest("Invalid email format.");
 }
+elseif (strlen($password) > 128) {
+    respondBadRequest("Password is too long.");
+}if (strlen($password) > 128) {
+    respondBadRequest("Password is too long.");
+}elseif (strlen($password) < 6) {
+    respondBadRequest("Password must be at least 6 characters.");
+}elseif (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
+    respondBadRequest("Password must contain at least one letter and one number.");
+}
+
 
 /* Check user */
 $stmt = $connect->prepare("SELECT id, password FROM users WHERE email = ?");
