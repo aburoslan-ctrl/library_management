@@ -2,13 +2,11 @@
 
 $method = "POST";
 $cache  = "no-cache";
-include "../../head.php";
+include "../../../head.php";
 
 /* Validate token */
 $datasentin = ValidateAPITokenSentIN();
 $user_id = $datasentin->usertoken;
-
-
 
 if (!isset($user_id) || input_is_invalid($user_id) || !is_numeric($user_id)) {
     respondUnauthorized();
@@ -45,7 +43,7 @@ if (isset($_POST['id'])) {
 
     /* Update borrow record */
     $update = $connect->prepare("
-        UPDATE borrowings 
+        UPDATE borrowings
         SET status = 'returned', return_date = CURDATE()
         WHERE id = ?
     ");
@@ -67,14 +65,10 @@ if (isset($_POST['id'])) {
         respondOK([], "Book returned successfully.");
 
     } else {
-
         respondBadRequest("Failed to return book.");
-
     }
 
 } else {
-
     respondBadRequest("Borrow ID is required.");
-
 }
 ?>

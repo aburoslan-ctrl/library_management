@@ -2,13 +2,11 @@
 
 $method = "GET";
 $cache  = "no-cache";
-include "../../head.php";
+include "../../../head.php";
 
 /* Validate token */
 $datasentin = ValidateAPITokenSentIN();
 $user_id = $datasentin->usertoken;
-
-
 
 if (!isset($user_id) || input_is_invalid($user_id) || !is_numeric($user_id)) {
     respondUnauthorized();
@@ -29,7 +27,9 @@ $stmt = $connect->prepare("
     ORDER BY b.created_at DESC
 ");
 
-$stmt->execute();
+if (!$stmt->execute()) {
+    respondInternalError("DB execute failed: " . $stmt->error);
+}
 $result = $stmt->get_result();
 
 $borrowings = [];

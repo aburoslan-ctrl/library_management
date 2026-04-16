@@ -2,25 +2,30 @@
 
 $method = "GET";
 $cache  = "no-cache";
-include "../../head.php";
+include "../../../head.php";
 
-/* Validate token */
-$datasentin = ValidateAPITokenSentIN();
-$user_id = $datasentin->usertoken;
+// Validate token
+$user = ValidateAPITokenSentIN();
+$user_id = $user->usertoken;
 
 if (!isset($user_id) || input_is_invalid($user_id) || !is_numeric($user_id)) {
     respondUnauthorized();
+    exit;
 }
 
-$user_id = (int)$user_id;
+// Admin only
+$roleCheck = $connect->prepare("SELECT role FROM users WHERE id = ?");
+$roleCheck->bind_param("i", $user_id);
+$roleCheck->execute();
+$roleResult = $roleCheck->get_result()->fetch_assoc();
 
-/* Fetch members */
+if (!$roleResult || $roleResult['role'] !== 'admin') {
+    respondForbiddenAuthorized("Admin access required.");
+    exit;
+}
+
 $stmt = $connect->prepare("
-    SELECT
-        id,
-        full_name,
-        phone,
-        created_at
+    SELECT id, full_name, phone, created_at
     FROM members
     ORDER BY created_at DESC
 ");
@@ -29,7 +34,6 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 $members = [];
-
 while ($row = $result->fetch_assoc()) {
     $members[] = $row;
 }

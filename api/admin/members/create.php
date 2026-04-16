@@ -1,21 +1,28 @@
 <?php
 $method = "POST";
 $cache  = "no-cache";
-include "../../head.php";
+include "../../../head.php";
 
-/* Validate token */
-$datasentin = ValidateAPITokenSentIN();
-$user_id = $datasentin->usertoken;
-
-
+// Validate token
+$user = ValidateAPITokenSentIN();
+$user_id = $user->usertoken;
 
 if (!isset($user_id) || input_is_invalid($user_id) || !is_numeric($user_id)) {
     respondUnauthorized();
+    exit;
 }
 
-$user_id = (int)$user_id;
+// Admin only
+$roleCheck = $connect->prepare("SELECT role FROM users WHERE id = ?");
+$roleCheck->bind_param("i", $user_id);
+$roleCheck->execute();
+$roleResult = $roleCheck->get_result()->fetch_assoc();
 
-/* Validate request fields */
+if (!$roleResult || $roleResult['role'] !== 'admin') {
+    respondForbiddenAuthorized("Admin access required.");
+    exit;
+}
+
 if (isset($_POST['full_name']) && isset($_POST['phone'])) {
 
     $full_name = cleanme($_POST['full_name']);
@@ -23,10 +30,10 @@ if (isset($_POST['full_name']) && isset($_POST['phone'])) {
 
     if (input_is_invalid($full_name)) {
         respondBadRequest("Member full name is required.");
-    } 
+    }
     else if (input_is_invalid($phone)) {
         respondBadRequest("Phone number is required.");
-    } 
+    }
     else {
         $full_name = preg_replace('/\s+/', ' ', trim($full_name));
         $phone = preg_replace('/[()\s-]+/', '', trim($phone));
@@ -46,29 +53,21 @@ if (isset($_POST['full_name']) && isset($_POST['phone'])) {
 
         if ($check->get_result()->num_rows > 0) {
             respondBadRequest("Member with this phone number already exists.");
-        } 
+        }
         else {
 
             $insert = $connect->prepare("INSERT INTO members (full_name, phone, created_at) VALUES (?, ?, NOW())");
             $insert->bind_param("ss", $full_name, $phone);
 
             if ($insert->execute()) {
-
                 respondOK([], "Member added successfully.");
-
-            } 
-            else {
-
+            } else {
                 respondBadRequest("Failed to add member. Please try again.");
-
             }
         }
     }
 
-} 
-else {
-
+} else {
     respondBadRequest("Invalid request. Full name and phone are required.");
-
 }
 ?>

@@ -1,13 +1,11 @@
 <?php
 $method = "POST";
 $cache  = "no-cache";
-include "../../head.php";
+include "../../../head.php";
 
 /* Validate token */
 $datasentin = ValidateAPITokenSentIN();
 $user_id = $datasentin->usertoken;
-
-
 
 if (!isset($user_id) || input_is_invalid($user_id) || !is_numeric($user_id)) {
     respondUnauthorized();
@@ -74,7 +72,7 @@ if (isset($_POST['member_id']) && isset($_POST['book_id'])) {
 
             /* Reduce available copies */
             $update = $connect->prepare("
-                UPDATE books 
+                UPDATE books
                 SET available_copies = available_copies - 1
                 WHERE id = ?
             ");
@@ -91,8 +89,6 @@ if (isset($_POST['member_id']) && isset($_POST['book_id'])) {
     }
 
 } else {
-
     respondBadRequest("Invalid request. Member ID and Book ID are required.");
-
 }
 ?>

@@ -1,11 +1,27 @@
 <?php
 $method = "POST";
 $cache  = "no-cache";
-include "../../head.php";
+include "../../../head.php";
 
-/* Validate token */
+// Validate token
 $user = ValidateAPITokenSentIN();
+$user_id = $user->usertoken;
 
+if (!isset($user_id) || input_is_invalid($user_id) || !is_numeric($user_id)) {
+    respondUnauthorized();
+    exit;
+}
+
+// Admin only
+$roleCheck = $connect->prepare("SELECT role FROM users WHERE id = ?");
+$roleCheck->bind_param("i", $user_id);
+$roleCheck->execute();
+$roleResult = $roleCheck->get_result()->fetch_assoc();
+
+if (!$roleResult || $roleResult['role'] !== 'admin') {
+    respondForbiddenAuthorized("Admin access required.");
+    exit;
+}
 
 if (isset($_POST['id']) && isset($_POST['title']) && isset($_POST['author']) && isset($_POST['total_copies'])) {
 
@@ -16,16 +32,16 @@ if (isset($_POST['id']) && isset($_POST['title']) && isset($_POST['author']) && 
 
     if (input_is_invalid($book_id) || !is_numeric($book_id)) {
         respondBadRequest("A valid book ID is required.");
-    } 
+    }
     else if (input_is_invalid($title)) {
         respondBadRequest("Book title cannot be empty.");
-    } 
+    }
     else if (input_is_invalid($author)) {
         respondBadRequest("Author name cannot be empty.");
-    } 
+    }
     else if (input_is_invalid($copies) || !is_numeric($copies)) {
         respondBadRequest("Total copies must be a valid number.");
-    } 
+    }
     else {
 
         $book_id = (int)$book_id;
@@ -48,7 +64,7 @@ if (isset($_POST['id']) && isset($_POST['title']) && isset($_POST['author']) && 
             respondBadRequest("Author name contains invalid characters.");
         }
 
-        $copies  = (int)$copies;
+        $copies = (int)$copies;
         if ($copies < 1 || $copies > 10000) {
             respondBadRequest("Total copies must be between 1 and 10000.");
         }
@@ -62,7 +78,7 @@ if (isset($_POST['id']) && isset($_POST['title']) && isset($_POST['author']) && 
         if ($result->num_rows === 0) {
             respondBadRequest("Book not found.");
             exit;
-        } 
+        }
         else {
             $book = $result->fetch_assoc();
             $borrowed = (int)$book['total_copies'] - (int)$book['available_copies'];
@@ -74,21 +90,14 @@ if (isset($_POST['id']) && isset($_POST['title']) && isset($_POST['author']) && 
             $update->bind_param("ssii", $title, $author, $copies, $book_id);
 
             if ($update->execute()) {
-
                 respondOK([], "Book updated successfully.");
-
             } else {
-
                 respondBadRequest("Failed to update book. Please try again.");
-
             }
         }
     }
 
-} 
-else {
-
+} else {
     respondBadRequest("Invalid request. Book ID, title, author and total copies are required.");
-
 }
 ?>

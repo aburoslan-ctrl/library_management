@@ -1,26 +1,21 @@
 <?php
 $method = "POST";
-include "../../head.php";
-
-
+$cache  = "no-cache";
+include "../../../head.php";
 
 if (!isset($_POST['email'], $_POST['password'])) {
     respondBadRequest("Email and password required.");
 }
 
-
 $email    = strtolower(cleanme($_POST['email']));
 $password = cleanme($_POST['password']);
-
 
 if (input_is_invalid($email) || input_is_invalid($password)) {
     respondBadRequest("All fields are required.");
 }
-
 elseif (isStringHasEmojis($email)) {
     respondBadRequest("Invalid characters in email.");
 }
-
 elseif (strlen($email) > 254) {
     respondBadRequest("Email is too long.");
 }
@@ -32,17 +27,16 @@ elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 }
 elseif (strlen($password) > 128) {
     respondBadRequest("Password is too long.");
-}if (strlen($password) > 128) {
-    respondBadRequest("Password is too long.");
-}elseif (strlen($password) < 6) {
+}
+elseif (strlen($password) < 6) {
     respondBadRequest("Password must be at least 6 characters.");
-}elseif (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
+}
+elseif (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
     respondBadRequest("Password must contain at least one letter and one number.");
 }
 
-
 /* Check user */
-$stmt = $connect->prepare("SELECT id, password FROM users WHERE email = ?");
+$stmt = $connect->prepare("SELECT id, password, role FROM users WHERE email = ?");
 $stmt->bind_param("s", $email);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -52,6 +46,10 @@ if ($result->num_rows === 0) {
 }
 
 $user = $result->fetch_assoc();
+
+if ($user['role'] !== 'user') {
+    respondForbiddenAuthorized("Access denied. Use admin login.");
+}
 
 /* Verify password */
 if (password_verify($password, $user['password'])) {
